@@ -18,7 +18,6 @@ myquant/
 │   ├── scripts/        # 核心脚本（数据获取、特征工程、回测等）
 │   ├── references/     # 理论文档（统计学、贝叶斯、因果推断）
 │   └── templates/      # 配置模板
-├── articles/           # 配套公众号文章系列（6篇）
 ├── examples/           # 示例代码和数据
 └── docs/               # 详细文档
 ```
@@ -87,20 +86,7 @@ python skill/scripts/backtesting_advanced.py
 - 浏览器自动化：绕过配额限制
 - 多角度分析："魔鬼代言人"辩论模式
 
-## 📖 学习资源
-
-### 公众号文章系列
-
-我们准备了一套完整的6篇文章，从零开始讲解AI量化投资：
-
-1. [量化投资的致命陷阱](articles/article_1_backtest_traps.md)
-2. [价格复权的秘密](articles/article_2_price_adjustment.md)
-3. [统计学视角下的量化策略](articles/article_3_statistical_validation.md)
-4. [贝叶斯思维在投资中的应用](articles/article_4_bayesian_thinking.md)
-5. [投资组合的科学](articles/article_5_portfolio_diversification.md)
-6. [AI增强的量化投资](articles/article_6_llm_integration.md)
-
-### 理论文档
+## 📖 理论文档
 
 - [统计检验方法论](skill/references/statistical_framework.md)
 - [贝叶斯推断指南](skill/references/bayesian_guide.md)
