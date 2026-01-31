@@ -1,5 +1,51 @@
 # Quant-Investor 技能更新日志
 
+## V2.1 - 2026年1月30日（最新）
+
+### 新增功能：投资大师智慧整合
+
+本次更新将六位传奇投资大师的智慧整合到量化框架中，将经典投资哲学与现代量化方法相结合。
+
+#### 整合的投资大师
+
+1. **本杰明·格雷厄姆** - 价值投资之父，安全边际理论
+2. **沃伦·巴菲特** - 护城河理论，长期持有
+3. **彼得·林奇** - PEG策略，成长股投资
+4. **Ray Dalio** - 风险平价，全天候策略
+5. **Michael Burry** - 逆向投资，深度研究
+6. **霍华德·马克斯** - 第二层思维，市场周期
+
+#### 核心实现
+
+**新增文件**:
+- `scripts/master_strategies.py` - 多维度评分系统，综合六位大师的量化标准
+- `references/master_investors_wisdom.md` - 详细的大师理念参考文档（20KB+）
+
+**核心特性**:
+- **多维度评分系统**: 对每只股票进行0-100分综合评分
+- **动态权重调整**: 根据市场周期（牛市后期/熊市危机/复苏早期/稳定增长）自动调整各大师策略权重
+- **批量筛选功能**: 支持对大量股票进行快速筛选和排序
+- **可量化标准**: 将大师的投资哲学转化为具体的量化指标
+
+#### 使用示例
+
+```python
+from master_strategies import MasterStrategies
+
+strategies = MasterStrategies()
+result = strategies.comprehensive_score(stock_data, market_data, sentiment_data)
+
+print(f"总分: {result['total_score']}")
+print(f"推荐: {result['recommendation']}")  # STRONG_BUY/BUY/HOLD/AVOID
+print(f"市场周期: {result['cycle_phase']}")
+```
+
+#### 技能文档更新
+
+- `SKILL.md` 新增附录E - 投资大师智慧整合
+
+---
+
 ## V2.0 - 2026年1月30日
 
 ### 重大升级
@@ -121,6 +167,5 @@
 
 ---
 
-**作者**: Manus AI  
-**版本**: 2.0  
-**发布日期**: 2026年1月30日
+**版本**: 2.1  
+**最后更新**: 2026年1月30日
