@@ -424,6 +424,27 @@ print(f"Shibor: {snapshot['monetary_policy']['shibor']}")
 3. 获取Token
 4. 根据需要的数据接口，确保有足够的积分
 
+**自定义API服务配置**（可选）：
+
+如果您使用第三方Tushare数据服务，可以通过以下方式配置：
+
+```python
+from tushare_client import TushareClient
+
+# 方式1：直接传入参数
+client = TushareClient(
+    token="YOUR_TOKEN",
+    http_url="http://your-custom-api-server.com"
+)
+
+# 方式2：使用环境变量
+# export TUSHARE_TOKEN="YOUR_TOKEN"
+# export TUSHARE_HTTP_URL="http://your-custom-api-server.com"
+client = TushareClient()
+```
+
+这样可以使用第三方提供的高权限Tushare数据服务，获取更多数据接口的访问权限。
+
 ---
 
 ## 6. 版本演进
