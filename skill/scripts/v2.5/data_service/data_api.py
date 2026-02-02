@@ -1,15 +1,19 @@
 """
 统一数据API
 为上层分析应用提供统一、简洁、语义化的数据访问接口
+
+V2.5.1更新：集成CNMacroDataManager，对标美股V2.6的数据结构
 """
 
 import sys
 sys.path.append('/home/ubuntu/skills/quant-investor/scripts/v2.5/data_acquisition')
+sys.path.append('/home/ubuntu/skills/quant-investor/scripts/v2.5/cn_macro_data')
 
 import pandas as pd
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 from data_source_manager import DataSourceManager
+from cn_macro_data_manager import CNMacroDataManager
 
 
 class DataAPI:
@@ -23,6 +27,7 @@ class DataAPI:
             tushare_token: Tushare Pro的token
         """
         self.manager = DataSourceManager(tushare_token=tushare_token)
+        self.macro_manager = CNMacroDataManager(tushare_token=tushare_token)
     
     # ==================== 股票数据 ====================
     
@@ -112,7 +117,7 @@ class DataAPI:
         
         return self.manager.get_fund_flow(stock_code, start_date, end_date)
     
-    # ==================== 宏观数据 ====================
+    # ==================== 宏观经济数据 (V2.5.1新增) ====================
     
     def get_gdp(self) -> pd.DataFrame:
         """
@@ -121,7 +126,7 @@ class DataAPI:
         Returns:
             DataFrame: GDP数据
         """
-        return self.manager.get_macro_gdp()
+        return self.macro_manager.get_gdp()
     
     def get_cpi(self) -> pd.DataFrame:
         """
@@ -130,7 +135,125 @@ class DataAPI:
         Returns:
             DataFrame: CPI数据
         """
-        return self.manager.get_macro_cpi()
+        return self.macro_manager.get_cpi()
+    
+    def get_ppi(self) -> pd.DataFrame:
+        """
+        获取PPI数据
+        
+        Returns:
+            DataFrame: PPI数据
+        """
+        return self.macro_manager.get_ppi()
+    
+    def get_pmi(self) -> pd.DataFrame:
+        """
+        获取PMI数据（制造业采购经理指数）
+        
+        Returns:
+            DataFrame: PMI数据
+        """
+        return self.macro_manager.get_pmi()
+    
+    # ==================== 货币政策数据 (V2.5.1新增) ====================
+    
+    def get_lpr(self) -> pd.DataFrame:
+        """
+        获取LPR贷款基础利率
+        
+        Returns:
+            DataFrame: LPR数据（1年期和5年期）
+        """
+        return self.macro_manager.get_lpr()
+    
+    def get_shibor(self) -> pd.DataFrame:
+        """
+        获取Shibor上海银行间同业拆放利率
+        
+        Returns:
+            DataFrame: Shibor数据
+        """
+        return self.macro_manager.get_shibor()
+    
+    def get_bond_yield(self, maturity: str = '10y') -> pd.DataFrame:
+        """
+        获取中国国债收益率
+        
+        Args:
+            maturity: 期限，如 '1y', '2y', '5y', '10y', '30y'
+            
+        Returns:
+            DataFrame: 国债收益率数据
+        """
+        return self.macro_manager.get_bond_yield(maturity)
+    
+    def get_yield_curve(self) -> Dict[str, float]:
+        """
+        获取中国国债收益率曲线（当前值）
+        
+        Returns:
+            Dict: 收益率曲线数据
+        """
+        return self.macro_manager.get_yield_curve()
+    
+    # ==================== 货币供应数据 (V2.5.1新增) ====================
+    
+    def get_money_supply(self) -> pd.DataFrame:
+        """
+        获取货币供应量数据（M0, M1, M2）
+        
+        Returns:
+            DataFrame: 货币供应量数据
+        """
+        return self.macro_manager.get_money_supply()
+    
+    def get_social_financing(self) -> pd.DataFrame:
+        """
+        获取社会融资规模数据
+        
+        Returns:
+            DataFrame: 社会融资规模数据
+        """
+        return self.macro_manager.get_social_financing()
+    
+    # ==================== 市场指数数据 (V2.5.1新增) ====================
+    
+    def get_index_daily(self, index_code: str, days: int = 250) -> pd.DataFrame:
+        """
+        获取指数日线行情
+        
+        Args:
+            index_code: 指数代码，如 '000300.SH' 或 'hs300'
+            days: 获取最近N天的数据
+            
+        Returns:
+            DataFrame: 指数日线数据
+        """
+        end_date = datetime.now().strftime('%Y%m%d')
+        start_dt = datetime.now() - timedelta(days=days)
+        start_date = start_dt.strftime('%Y%m%d')
+        
+        return self.macro_manager.get_index_daily(index_code, start_date, end_date)
+    
+    def get_market_indices(self) -> Dict[str, Dict[str, Any]]:
+        """
+        获取主要市场指数的最新数据
+        
+        Returns:
+            Dict: 市场指数数据
+        """
+        return self.macro_manager.get_market_indices()
+    
+    # ==================== 宏观数据快照 (V2.5.1新增) ====================
+    
+    def get_macro_snapshot(self) -> Dict[str, Any]:
+        """
+        获取中国宏观经济数据快照
+        
+        Returns:
+            Dict: 宏观数据快照，包含经济数据、货币政策、货币供应、市场指数
+        """
+        return self.macro_manager.get_macro_snapshot()
     
     # ==================== 分析辅助方法 ====================
     
@@ -173,9 +296,15 @@ class DataAPI:
         else:
             raise ValueError(f"无法识别的股票代码: {code}")
     
-    def get_stats(self):
+    def get_stats(self) -> Dict[str, Any]:
         """获取数据API统计信息"""
-        return self.manager.get_stats()
+        stock_stats = self.manager.get_stats()
+        macro_stats = self.macro_manager.get_api_stats()
+        
+        return {
+            'stock_data': stock_stats,
+            'macro_data': macro_stats
+        }
 
 
 if __name__ == '__main__':
@@ -186,44 +315,65 @@ if __name__ == '__main__':
     api = DataAPI(tushare_token=token)
     
     print("=" * 60)
-    print("统一数据API测试")
+    print("统一数据API测试 (V2.5.1)")
     print("=" * 60)
     
     # 测试获取股票列表
     print("\n1. 测试获取上交所股票列表...")
     stock_list = api.get_stock_list(market='sh')
     print(f"✅ 获取 {len(stock_list)} 只股票")
-    print(stock_list.head())
     
     # 测试获取股票价格
     print("\n2. 测试获取股票价格（最近30天）...")
     price_data = api.get_stock_price('600519.SH', days=30, adjust='qfq')
     print(f"✅ 获取 {len(price_data)} 条价格数据")
-    print(price_data.head())
-    
-    # 测试获取财务指标
-    print("\n3. 测试获取财务指标...")
-    financial_data = api.get_stock_financial('600519.SH')
-    print(f"✅ 获取财务指标")
-    print(financial_data.head())
     
     # 测试获取GDP数据
-    print("\n4. 测试获取GDP数据...")
+    print("\n3. 测试获取GDP数据...")
     gdp_data = api.get_gdp()
     print(f"✅ 获取 {len(gdp_data)} 条GDP数据")
-    print(gdp_data.tail())
     
-    # 测试代码标准化
-    print("\n5. 测试股票代码标准化...")
-    print(f"600519 -> {api.normalize_stock_code('600519')}")
-    print(f"000001 -> {api.normalize_stock_code('000001')}")
-    print(f"300750 -> {api.normalize_stock_code('300750')}")
+    # 测试获取CPI数据
+    print("\n4. 测试获取CPI数据...")
+    cpi_data = api.get_cpi()
+    print(f"✅ 获取 {len(cpi_data)} 条CPI数据")
+    
+    # 测试获取PMI数据
+    print("\n5. 测试获取PMI数据...")
+    pmi_data = api.get_pmi()
+    print(f"✅ 获取 {len(pmi_data)} 条PMI数据")
+    
+    # 测试获取LPR数据
+    print("\n6. 测试获取LPR数据...")
+    lpr_data = api.get_lpr()
+    print(f"✅ 获取 {len(lpr_data)} 条LPR数据")
+    
+    # 测试获取Shibor数据
+    print("\n7. 测试获取Shibor数据...")
+    shibor_data = api.get_shibor()
+    print(f"✅ 获取 {len(shibor_data)} 条Shibor数据")
+    
+    # 测试获取货币供应数据
+    print("\n8. 测试获取货币供应数据...")
+    money_data = api.get_money_supply()
+    print(f"✅ 获取 {len(money_data)} 条货币供应数据")
+    
+    # 测试获取沪深300指数
+    print("\n9. 测试获取沪深300指数...")
+    hs300_data = api.get_index_daily('hs300', days=30)
+    print(f"✅ 获取 {len(hs300_data)} 条沪深300数据")
+    
+    # 测试获取宏观数据快照
+    print("\n10. 测试获取宏观数据快照...")
+    snapshot = api.get_macro_snapshot()
+    print(f"✅ 快照时间: {snapshot['timestamp']}")
+    print(f"   经济数据: {snapshot['economy']}")
+    print(f"   货币政策: {snapshot['monetary_policy']}")
     
     # 打印统计信息
     print("\n" + "=" * 60)
     print("数据API统计信息:")
     print("=" * 60)
     stats = api.get_stats()
-    for key, value in stats.items():
-        if key != 'errors':
-            print(f"{key}: {value}")
+    print(f"股票数据统计: {stats['stock_data']}")
+    print(f"宏观数据统计: {stats['macro_data']}")

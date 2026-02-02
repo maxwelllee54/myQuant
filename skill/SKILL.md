@@ -261,6 +261,69 @@ for event in calendar[:5]:
 
 ## 4. 核心模块详解
 
+### 4.0 A股宏观数据层 (V2.5.1 NEW)
+
+**V2.5.1更新**：对标美股V2.6的数据结构，为A股增加了完整的宏观经济数据支持。
+
+#### CNMacroDataManager
+
+**功能**：中国宏观数据管理器，提供完整的A股宏观经济数据支持。
+
+**数据覆盖范围**：
+
+| 数据类型 | 覆盖内容 | 数据源 |
+|:---|:---|:---|
+| **宏观经济数据** | GDP、CPI、PPI、PMI | Tushare (主) + AKShare (辅) |
+| **货币政策数据** | LPR、Shibor、国债收益率 | Tushare (主) + AKShare (辅) |
+| **货币供应数据** | M0、M1、M2、社会融资规模 | Tushare (主) + AKShare (辅) |
+| **市场指数数据** | 上证、深证、沪深300、中证500、创业板、科创50 | Tushare (主) + AKShare (辅) |
+
+**核心方法**：
+- `get_gdp()`: 获取GDP数据
+- `get_cpi()`: 获取CPI数据
+- `get_ppi()`: 获取PPI数据
+- `get_pmi()`: 获取PMI数据（制造业采购经理指数）
+- `get_lpr()`: 获取LPR贷款基础利率
+- `get_shibor()`: 获取Shibor上海银行间同业拆放利率
+- `get_bond_yield()`: 获取中国国债收益率
+- `get_yield_curve()`: 获取中国国债收益率曲线
+- `get_money_supply()`: 获取货币供应量数据（M0、M1、M2）
+- `get_social_financing()`: 获取社会融资规模数据
+- `get_index_daily()`: 获取指数日线行情
+- `get_market_indices()`: 获取主要市场指数的最新数据
+- `get_macro_snapshot()`: 获取中国宏观经济数据快照
+
+**使用示例**：
+
+```python
+import sys
+sys.path.append('/home/ubuntu/skills/quant-investor/scripts/v2.5/cn_macro_data')
+from cn_macro_data_manager import CNMacroDataManager
+
+# 初始化管理器
+manager = CNMacroDataManager(tushare_token='YOUR_TUSHARE_TOKEN')
+
+# 获取宏观数据快照
+snapshot = manager.get_macro_snapshot()
+print(f"GDP: {snapshot['economy']['gdp']}")
+print(f"CPI: {snapshot['economy']['cpi']}")
+print(f"PMI: {snapshot['economy']['pmi']}")
+print(f"LPR: {snapshot['monetary_policy']['lpr']}")
+print(f"Shibor: {snapshot['monetary_policy']['shibor']}")
+```
+
+**A股与美股数据结构对比**：
+
+| 数据类型 | A股 (V2.5.1) | 美股 (V2.6) |
+|:---|:---|:---|
+| 宏观经济 | GDP、CPI、PPI、PMI | GDP、CPI、PCE、PPI |
+| 货币政策 | LPR、Shibor、国债收益率 | 联邦基金利率、国债收益率 |
+| 货币供应 | M0、M1、M2、社会融资规模 | M2 |
+| 市场指数 | 上证、深证、沪深300、中证500 | 标普500、纳斯达克、道琼斯 |
+| 市场情绪 | - | VIX恐慌指数 |
+
+---
+
 ### 4.1 美股数据层 (V2.6)
 
 #### FREDClient
@@ -368,6 +431,7 @@ for event in calendar[:5]:
 | 版本 | 核心特性 | 发布时间 |
 |:---|:---|:---|
 | **V2.6** | 美股宏观数据层，FRED/Finnhub/yfinance集成 | 2026-02-01 |
+| **V2.5.1** | A股宏观数据层，对标美股V2.6数据结构，CNMacroDataManager | 2026-02-01 |
 | **V2.5** | A股一手数据驱动分析框架，Tushare/AKShare集成 | 2026-01-31 |
 | **V2.4** | LLM增强量化分析框架，多Agent协作 | 2026-01-30 |
 | **V2.3** | 工业级基础设施，表达式引擎、特征缓存、增强回测 | 2026-01-29 |
