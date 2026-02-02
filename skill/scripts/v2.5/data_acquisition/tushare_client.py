@@ -1,6 +1,8 @@
 """
 Tushare Pro数据客户端
 负责与Tushare Pro API进行交互，获取股票、宏观、行业等金融数据
+
+支持自定义API服务配置，适用于第三方Tushare数据服务
 """
 
 import tushare as ts
@@ -14,20 +16,32 @@ from datetime import datetime
 class TushareClient:
     """Tushare Pro数据客户端"""
     
-    def __init__(self, token: Optional[str] = None):
+    def __init__(self, 
+                 token: Optional[str] = None,
+                 http_url: Optional[str] = None):
         """
         初始化Tushare客户端
         
         Args:
             token: Tushare Pro的token，如果不提供则从环境变量TUSHARE_TOKEN读取
+            http_url: 自定义API服务地址，如果不提供则从环境变量TUSHARE_HTTP_URL读取
+                      用于支持第三方Tushare数据服务
         """
         self.token = token or os.getenv('TUSHARE_TOKEN')
         if not self.token:
             raise ValueError("Tushare token未提供，请设置TUSHARE_TOKEN环境变量或传入token参数")
         
+        self.http_url = http_url or os.getenv('TUSHARE_HTTP_URL')
+        
         # 设置token
         ts.set_token(self.token)
         self.pro = ts.pro_api()
+        
+        # 如果提供了自定义API服务地址，则进行配置
+        # 这是为了支持第三方Tushare数据服务
+        if self.http_url:
+            self.pro._DataApi__token = self.token
+            self.pro._DataApi__http_url = self.http_url
         
         # API调用统计
         self.call_count = 0
@@ -366,8 +380,8 @@ class TushareClient:
         获取中国GDP数据
         
         Args:
-            start_q: 开始季度 YYYYQ1/Q2/Q3/Q4
-            end_q: 结束季度
+            start_q: 开始季度 YYYYQN (如 2020Q1)
+            end_q: 结束季度 YYYYQN
             
         Returns:
             DataFrame: GDP数据
@@ -388,7 +402,7 @@ class TushareClient:
         
         Args:
             start_m: 开始月份 YYYYMM
-            end_m: 结束月份
+            end_m: 结束月份 YYYYMM
             
         Returns:
             DataFrame: CPI数据
@@ -409,7 +423,7 @@ class TushareClient:
         
         Args:
             start_m: 开始月份 YYYYMM
-            end_m: 结束月份
+            end_m: 结束月份 YYYYMM
             
         Returns:
             DataFrame: PPI数据
@@ -426,11 +440,11 @@ class TushareClient:
                 start_m: Optional[str] = None,
                 end_m: Optional[str] = None) -> pd.DataFrame:
         """
-        获取中国货币供应量（M0、M1、M2）
+        获取中国货币供应量数据（M0、M1、M2）
         
         Args:
             start_m: 开始月份 YYYYMM
-            end_m: 结束月份
+            end_m: 结束月份 YYYYMM
             
         Returns:
             DataFrame: 货币供应量数据
@@ -456,8 +470,8 @@ class TushareClient:
         Args:
             ts_code: 股票代码
             trade_date: 交易日期 YYYYMMDD
-            start_date: 开始日期
-            end_date: 结束日期
+            start_date: 开始日期 YYYYMMDD
+            end_date: 结束日期 YYYYMMDD
             
         Returns:
             DataFrame: 资金流向数据
@@ -480,13 +494,13 @@ class TushareClient:
                       start_date: Optional[str] = None,
                       end_date: Optional[str] = None) -> pd.DataFrame:
         """
-        获取技术因子（MACD、KDJ、RSI等）
+        获取股票技术因子（MACD、KDJ、RSI等）
         
         Args:
             ts_code: 股票代码
             trade_date: 交易日期 YYYYMMDD
-            start_date: 开始日期
-            end_date: 结束日期
+            start_date: 开始日期 YYYYMMDD
+            end_date: 结束日期 YYYYMMDD
             
         Returns:
             DataFrame: 技术因子数据
@@ -503,42 +517,142 @@ class TushareClient:
         
         return self._call_api('stk_factor', **params)
     
-    def get_call_stats(self) -> Dict[str, Any]:
-        """获取API调用统计信息"""
+    # ==================== 指数数据 ====================
+    
+    def get_index_daily(self,
+                       ts_code: Optional[str] = None,
+                       trade_date: Optional[str] = None,
+                       start_date: Optional[str] = None,
+                       end_date: Optional[str] = None) -> pd.DataFrame:
+        """
+        获取指数日线行情
+        
+        Args:
+            ts_code: 指数代码 (如 000001.SH 上证指数, 000300.SH 沪深300)
+            trade_date: 交易日期 YYYYMMDD
+            start_date: 开始日期 YYYYMMDD
+            end_date: 结束日期 YYYYMMDD
+            
+        Returns:
+            DataFrame: 指数日线数据
+        """
+        params = {}
+        if ts_code:
+            params['ts_code'] = ts_code
+        if trade_date:
+            params['trade_date'] = trade_date
+        if start_date:
+            params['start_date'] = start_date
+        if end_date:
+            params['end_date'] = end_date
+        
+        return self._call_api('index_daily', **params)
+    
+    def get_index_basic(self,
+                       market: Optional[str] = None) -> pd.DataFrame:
+        """
+        获取指数基本信息
+        
+        Args:
+            market: 交易所或服务商 SSE上交所 SZSE深交所 CSI中证 CICC中金 SW申万 OTH其他
+            
+        Returns:
+            DataFrame: 指数基本信息
+        """
+        params = {}
+        if market:
+            params['market'] = market
+        
+        return self._call_api('index_basic', **params)
+    
+    # ==================== 美股数据 ====================
+    
+    def get_us_daily(self,
+                    ts_code: Optional[str] = None,
+                    trade_date: Optional[str] = None,
+                    start_date: Optional[str] = None,
+                    end_date: Optional[str] = None) -> pd.DataFrame:
+        """
+        获取美股日线行情
+        
+        Args:
+            ts_code: 美股代码 (如 AAPL, MSFT)
+            trade_date: 交易日期 YYYYMMDD
+            start_date: 开始日期 YYYYMMDD
+            end_date: 结束日期 YYYYMMDD
+            
+        Returns:
+            DataFrame: 美股日线数据
+        """
+        params = {}
+        if ts_code:
+            params['ts_code'] = ts_code
+        if trade_date:
+            params['trade_date'] = trade_date
+        if start_date:
+            params['start_date'] = start_date
+        if end_date:
+            params['end_date'] = end_date
+        
+        return self._call_api('us_daily', **params)
+    
+    def get_us_basic(self,
+                    ts_code: Optional[str] = None,
+                    classify: Optional[str] = None) -> pd.DataFrame:
+        """
+        获取美股基本信息
+        
+        Args:
+            ts_code: 美股代码
+            classify: 分类 ADR美国存托凭证 GDR全球存托凭证 EQ普通股
+            
+        Returns:
+            DataFrame: 美股基本信息
+        """
+        params = {}
+        if ts_code:
+            params['ts_code'] = ts_code
+        if classify:
+            params['classify'] = classify
+        
+        return self._call_api('us_basic', **params)
+    
+    # ==================== 工具方法 ====================
+    
+    def get_api_stats(self) -> Dict[str, Any]:
+        """
+        获取API调用统计
+        
+        Returns:
+            Dict: 包含调用次数等统计信息
+        """
         return {
-            'total_calls': self.call_count,
-            'last_call_time': datetime.fromtimestamp(self.last_call_time) if self.last_call_time else None
+            'call_count': self.call_count,
+            'last_call_time': self.last_call_time,
+            'token_prefix': self.token[:8] + '...' if self.token else None,
+            'http_url': self.http_url
         }
 
 
+# 测试代码
 if __name__ == '__main__':
-    # 测试代码
-    try:
-        client = TushareClient()
-        
-        # 测试获取股票列表
-        print("测试获取股票列表...")
-        stock_list = client.get_stock_basic(exchange='SSE', list_status='L')
-        print(f"上交所上市股票数量: {len(stock_list)}")
-        print(stock_list.head())
-        
-        # 测试获取日线行情
-        print("\n测试获取日线行情...")
-        daily_data = client.get_daily(ts_code='600519.SH', start_date='20260101', end_date='20260131')
-        print(f"贵州茅台1月行情数据: {len(daily_data)}条")
-        print(daily_data.head())
-        
-        # 测试获取财务指标
-        print("\n测试获取财务指标...")
-        fina_data = client.get_fina_indicator(ts_code='600519.SH', period='20231231')
-        print("贵州茅台2023年财务指标:")
-        print(fina_data.head())
-        
-        # 打印调用统计
-        print("\nAPI调用统计:")
-        print(client.get_call_stats())
-        
-    except PermissionError as e:
-        print(f"❌ Tushare权限不足，请联系用户解决: {e}")
-    except Exception as e:
-        print(f"❌ 测试失败: {e}")
+    # 测试TushareClient
+    client = TushareClient()
+    
+    # 测试获取股票列表
+    print("测试获取股票列表...")
+    df = client.get_stock_basic(exchange='SSE')
+    print(f"上交所股票数量: {len(df)}")
+    
+    # 测试获取日线数据
+    print("\n测试获取日线数据...")
+    df = client.get_daily(ts_code='600519.SH', start_date='20260101', end_date='20260131')
+    print(f"贵州茅台日线数据: {len(df)}条")
+    
+    # 测试获取财务指标
+    print("\n测试获取财务指标...")
+    df = client.get_fina_indicator(ts_code='600519.SH', period='20231231')
+    print(f"贵州茅台财务指标: {len(df.columns)}个字段")
+    
+    # 打印API统计
+    print(f"\nAPI调用统计: {client.get_api_stats()}")
