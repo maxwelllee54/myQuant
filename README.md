@@ -2,13 +2,16 @@
 
 一个端到端的AI量化投资框架，融合了统计学、贝叶斯推断、现代投资组合理论、投资大师智慧和大型语言模型增强分析。
 
-**当前版本**: V3.2 (动态因子挖掘)
+**当前版本**: V3.5 (深度特征合成)
 **核心理念**: 全球化一手数据驱动 + LLM深度思辨 + 动态智能决策 + 全方位风险管理
 
 ---
 
 ## 🎯 项目特色
 
+- ✅ **深度特征合成 (V3.5)**：借鉴`featuretools`的DFS思想，通过递归应用变换和聚合算子，自动生成多层、复杂的特征，极大提升了因子挖掘的深度和效率。
+- ✅ **海纳百川因子库 (V3.4)**：集成了`qlib`的**Alpha158**因子库和`tsfresh`的**时间序列特征库**，构建了一个内容丰富、质量过硬的基础因子库。
+- ✅ **工业级因子分析 (V3.3)**：全面对标`alphalens`，实现标准化的、图文并茂的**Tear Sheet分析报告**，将因子分析的专业性提升到工业级标准。
 - ✅ **动态因子挖掘 (V3.2)**：内置**遗传规划**引擎，自动化、持续性地挖掘、验证和管理有效因子，赋予框架自我进化的能力。
 - ✅ **全球化数据 (V3.0)**：同时支持A股和美股市场，覆盖宏观、行业、个股、**期货期权**全维度数据
 - ✅ **一手数据驱动**：直接从FRED、Tushare、Finnhub、yfinance等专业数据源获取原始数据
@@ -19,17 +22,17 @@
 
 ---
 
-## 🆕 V3.2 新特性：动态因子挖掘系统
+## 🆕 V3.5 新特性：深度特征合成引擎
 
-V3.2版本引入了全新的**动态因子挖掘系统**，解决了传统量化研究中因子来源单一、迭代速度慢、有效性衰减等核心痛点。
+V3.5版本引入了全新的**深度特征合成引擎**，解决了传统因子挖掘方法难以发现复杂、非线性因子的核心痛点。
 
 ### 核心特性
 
 | 特性 | 描述 |
 |:---|:---|
-| **自动化因子生成** | 基于**遗传规划 (Genetic Programming)**，自动组合基础数据（价、量、财务指标等）生成数以万计的新因子表达式。 |
-| **全面有效性验证** | 对新生成的因子进行全面的有效性检验，包括**IC/IR分析、分组回测、换手率分析、衰减分析**等，确保因子的预测能力和稳定性。 |
-| **因子全生命周期管理** | 建立了一个**因子库 (Factor Library)**，对所有因子进行从“诞生”、“活跃”、“监控”到“淘汰”的全生命周期管理。 |
+| **深度特征合成 (DFS)** | 借鉴`featuretools`的设计思想，通过递归应用变换和聚合算子，自动生成多层、复杂的特征。 |
+| **增强版遗传规划** | 将DFS生成的特征作为高质量的“种子”，注入遗传规划的初始种群，极大提升了因子挖掘的效率和质量。 |
+| **丰富的算子库** | 内置了超过50种变换、聚合和二元算子，支持灵活的特征组合。 |
 
 ---
 
@@ -38,8 +41,13 @@ V3.2版本引入了全新的**动态因子挖掘系统**，解决了传统量化
 ```
 myquant/
 └── scripts/                      # quant-investor技能核心脚本
-    ├── v3.2/                   # V3.2 动态因子挖掘系统 (NEW)
-    │   └── factor_mining/      # 因子生成 + 验证 + 库管理
+    ├── v3.5/                   # V3.5 深度特征合成引擎 (NEW)
+    │   └── deep_synthesis/     # 深度特征合成 + 增强版遗传规划
+    ├── v3.4/                   # V3.4 海纳百川因子库 (NEW)
+    │   └── factor_library/     # Alpha158 + tsfresh
+    ├── v3.3/                   # V3.3 工业级因子分析 (NEW)
+    │   └── factor_analysis/    # Tear Sheet + 特征选择
+    ├── v3.2/                   # V3.2 动态因子挖掘系统
     ├── v3.1/                   # V3.1 动态智能框架
     ├── v3.0/                   # V3.0 全景数据层
     ├── v2.9/                   # V2.9 多Agent辩论系统
@@ -53,36 +61,41 @@ myquant/
 ### 1. 安装依赖
 
 ```bash
-pip install tushare akshare yfinance pandas numpy pyarrow requests scipy openai
+pip install tushare akshare yfinance pandas numpy pyarrow requests scipy openai matplotlib
 ```
 
-### 2. 运行示例 (V3.2)
+### 2. 运行示例 (V3.5)
 
-运行完整的因子挖掘流水线。
+运行增强版遗传规划因子生成器。
 
 ```python
 import sys
 import pandas as pd
 import numpy as np
 
-sys.path.append("scripts/v3.2/factor_mining")
-from factor_mining_pipeline import run_factor_mining_pipeline
+sys.path.append("scripts/v3.5/deep_synthesis")
+from deep_feature_engine import EnhancedGeneticFactorGenerator
 
 # 1. 准备数据 (省略...)
 
-# 2. 运行流水线
-new_factors = run_factor_mining_pipeline(
+# 2. 运行增强版遗传规划
+generator = EnhancedGeneticFactorGenerator(
+    population_size=30,
+    generations=10,
+    max_depth=4
+)
+
+best_factors = generator.generate(
+    base_features=["close", "volume"],
     data=data,
     target=target,
-    generations=10,      # 迭代10代
-    population_size=30,  # 种群30个
     verbose=True
 )
 
-# 3. 显示新发现的有效因子
-print("\n=== 新入库的有效因子 ===")
-for factor in new_factors:
-    print(f"- {factor.name}: {factor.expression}")
+# 3. 显示最优因子
+print("\n=== 最优因子 ===")
+for i, factor in enumerate(best_factors[:5]):
+    print(f"- {factor["name"][:80]}... IC={factor["fitness"]:.4f}")
 ```
 
 ---
@@ -91,6 +104,9 @@ for factor in new_factors:
 
 | 版本 | 核心特性 | 发布时间 |
 |:---|:---|:---|
+| **V3.5** | **深度特征合成引擎** | 2026-02-04 |
+| **V3.4** | **海纳百川因子库** | 2026-02-04 |
+| **V3.3** | **工业级因子分析** | 2026-02-04 |
 | **V3.2** | **动态因子挖掘系统** | 2026-02-04 |
 | **V3.1** | **动态智能框架** | 2026-02-03 |
 | **V3.0** | **全景数据层** | 2026-02-03 |
